@@ -17,6 +17,13 @@ jobs:
     name: Build Image
     runs-on: ubuntu-latest
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Checkout current repo  
         uses: actions/checkout@v2
 
@@ -43,14 +50,15 @@ jobs:
  
       - name: Build image
         run: |
-          docker build \
+          docker buildx build \
+            --platform linux/amd64,linux/arm64/v8 \
             --tag ghcr.io/bots-house/docker-telegram-bot-api:latest \
             --tag ghcr.io/bots-house/docker-telegram-bot-api:$version \
             .
 
       - name: Login to registry
         run: |
-          echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
       - name: Push images
         run: |
